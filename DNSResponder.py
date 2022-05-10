@@ -9,7 +9,7 @@ import scapy.all as scapy
 # NOTE: for a 10% NXDomain result set the variable below to 10. 
 nxresponsefreq=10
 # Set local IP to filter out any system DNS requests
-src_IP="104.238.164.84"
+src_IP="x.x.x.x"
 # Set what you want the IPv4 response to be
 resolved_ip4="1.2.3.4"
 # Set what you want the IPV6 response to be
@@ -17,7 +17,7 @@ resolved_ip6="2800:370:10::110"
 # Set the name of the public facing NIC
 dev = "enp1s0"
 # Set nameserver domain for any PTR requests
-nameserver = "etinvasion.com"
+nameserver = "example.com"
 ######### end of Variable Section #############
 
 filter = "udp port 53 and ip src not 127.0.0.1 and ip src not {}".format(src_IP)
@@ -35,7 +35,7 @@ def handle_packet(packet):
   # Checks for queries.
   if dns.qr == 0 and dns.opcode == 0:
   # below line is for troubleshooting
-    print("qr %s opcode %s qtype %s  rcode %s" % (dns.qr, dns.opcode, dns.qd.qtype, randrcode))
+  #  print("qr %s opcode %s qtype %s  rcode %s" % (dns.qr, dns.opcode, dns.qd.qtype, randrcode))
   
   # Gets the Queried host name for console output
     queried_host = dns.qd.qname[:-1].decode()
@@ -45,7 +45,8 @@ def handle_packet(packet):
     # response from an A request.  So if we ever get an AAAA request we must assume that 
     # the queried A reply was good.  So we always make the AAAA request good, otherwise
     # you could end up with a mixed response, meaning a resolved IPv4 with a NXDomain
-    # below that from the AAAA request which is not a correct response.
+    # below that from the AAAA request which is not a correct response.  It also checks for
+    # a PTR request (qtype 12).  
     if ( randrcode == 0 or dns.qd.qtype == 28 ) and dns.qd.qtype != 12:
       # Checks if it's a A record request (1)
       if dns.qd.qtype == 1:
@@ -82,6 +83,8 @@ def handle_packet(packet):
       # outputs to terminal and sends UDP response.
       print("Send %s has %s to %s" % (queried_host, resolved_ip, ip.src))
       scapy.send(dns_reply, iface=dev)
+    # Checks if the query is for a PTR record, answers based on what you set for nameserver in
+    # the variable section.
     if dns.qd.qtype == 12: 
       dns_answer = scapy.DNSRR(rrname=queried_host + ".",
                          ttl=333000,
