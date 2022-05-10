@@ -33,7 +33,7 @@ def handle_packet(packet):
     randrcode = 0
 
   # Checks for queries.
-  if dns.qr == 0 and dns.opcode == 0:
+  if dns.qr == 0 and dns.opcode == 0 and (dns.qd.qtype == 1 or dns.qd.qtype == 12 or dns.qd.qtype == 28):
   # below line is for troubleshooting
   #  print("qr %s opcode %s qtype %s  rcode %s" % (dns.qr, dns.opcode, dns.qd.qtype, randrcode))
   
